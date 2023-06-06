@@ -1,12 +1,12 @@
-_# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 # matomo2datamart
 # https://github.com/dneupokoev/matomo2datamart
 #
 # Matomo to DataMart: Создание витрин данных из Matomo
 #
-dv_file_version = '230605.01'
+dv_file_version = '230606.01'
 #
-# 230605.01:
+# 230606.01:
 # + добавил
 #
 # 230605.01:
@@ -181,13 +181,19 @@ if __name__ == '__main__':
             dv_file_lib_open.close()
         #
         #
-        # данные для таблицы dm_visits
-        logger.debug(f"prepare_tbl_dm_visits - begin")
-        dv_result_json = prepare_tbl_dm_visits(conn=settings.CH_connect, rep_date='2023-05-01', dbname=settings.CH_matomo_dbname)
-        logger.debug(f"prepare_tbl_dm_visits - {dv_result_json = }")
-        logger.debug(f"prepare_tbl_dm_visits - end")
-        if dv_result_json['f_status'] != 'SUCCESS':
-            raise f"{dv_result_json['f_text']}"
+        dv_count_day_calc = 0
+        dv_count_day_max = 10
+        dv_result_json = {}
+        while dv_count_day_calc < dv_count_day_max:
+            dv_count_day_calc = dv_count_day_calc + 1
+            dv_rep_date = (datetime.today() - timedelta(days=dv_count_day_calc)).strftime('%Y-%m-%d')
+            # данные для таблицы dm_visits
+            logger.debug(f"prepare_tbl_dm_visits - {dv_rep_date} - begin")
+            dv_result_json = prepare_tbl_dm_visits(conn=settings.CH_connect, rep_date=dv_rep_date, dbname=settings.CH_matomo_dbname)
+            logger.debug(f"prepare_tbl_dm_visits - {dv_result_json = }")
+            logger.debug(f"prepare_tbl_dm_visits - {dv_rep_date} - end")
+            if dv_result_json['f_status'] != 'SUCCESS':
+                raise f"{dv_result_json['f_text']}"
         #
         # если заливка данных в кликхаус прошла успешно, то делаем отметку об этом
         dv_for_send_txt_type = dv_result_json['f_status']
